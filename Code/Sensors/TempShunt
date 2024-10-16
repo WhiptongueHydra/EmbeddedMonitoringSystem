@@ -1,0 +1,76 @@
+#include <math.h>
+
+//Shunt resistor inputs
+int shuntPos = A0;
+int shuntNeg = A1;
+
+//Temperature circuit inputs
+int tempPin = A2;
+
+//RTC Values from Datasheet
+const float R1 = 10000.0; //Value of other resistor in series
+const float R0 = 10000.0; //Nominal value of our resistor at 25 degreesC
+const float T0 = 298.15; //Reference temperature at which our resistor is 10kOhms (this number is in kelvin but it is the same as 25 degrees C)
+const float B = 3977; //The 'B'/beta parameter of the NTC from datasheet
+const float Vin = 5.0;
+
+float tempToV(int digital){
+  double step = 5.0/1024.0;
+  float voltage = digital * step;
+  return voltage;
+}
+
+float thermistorRes(float Vout){
+  return (R1 * ((Vin/Vout) - 1));
+}
+
+float SteinHart(float Rth){
+  float kelvin = 1.0 / ((1.0 / T0) + (1.0 / B) * log(Rth / R0));
+  return (kelvin - 273.15);
+}
+
+void setup() {
+  Serial.begin(115200);
+
+}
+
+void loop() {
+  
+  /*
+    SHUNT RESISTOR MEASUREMENTS
+    NEED TO CONVERT THIS TO A REAL VOLTAGE WHEN ITS ALL WORKING
+  */
+
+  //Get the digital ADC value from the pins
+  //int shuntD1 = analogRead(shuntPos);
+  //int shuntD2 = analogRead(shuntNeg);
+
+  //Find the difference between the voltages for total drop 
+  //int shuntV = shuntDig1 - shuntDig2;
+
+  //Serial.println(shuntDig1);
+  //Serial.println(shuntDig2);
+  //Serial.print("Shunt V: ");
+  //Serial.println(shuntV);
+
+  /*
+    THERMISTOR MEASUREMENTS
+    NEED TO CONVERT ADC INTO A REAL VOLTAGE
+    NEED TO CONVERT REAL VOLTAGE TO A TEMPERATURE
+  */
+
+  //Reads ADC converted value of V across fixed R
+  int tempDigVal = analogRead(tempPin);
+  //Converts this BACK into a real voltage
+  float Vout = tempToV(tempDigVal);
+  //Finds the resistance of the thermistor based on this
+  float Rth = thermistorRes(Vout);
+  //Finds the temp in Kelvin and converts to degrees C
+  float temperature = SteinHart(Rth);
+
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.println("°C");
+
+  delay(1000);
+}
