@@ -1,0 +1,25 @@
+#include <SPI.h>
+const int CE_PIN = 10;
+
+void setup() {
+    pinMode(CE_PIN, OUTPUT);
+    digitalWrite(CE_PIN, HIGH);
+    SPI.begin();
+    Serial.begin(115200);
+}
+
+void loop() {
+    readFlash();
+    delay(1000);
+}
+
+void readFlash() {
+    digitalWrite(CE_PIN, LOW);
+    SPI.transfer(0x03);  // Read command
+    SPI.transfer(0x00);  // Address MSB
+    SPI.transfer(0x00);  // Address
+    SPI.transfer(0x00);  // Address LSB
+    byte data = SPI.transfer(0x00); // Read data
+    digitalWrite(CE_PIN, HIGH);
+    Serial.println(data, HEX);
+}
