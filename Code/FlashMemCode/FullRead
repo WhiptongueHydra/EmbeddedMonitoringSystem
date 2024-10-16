@@ -1,0 +1,50 @@
+#include <SPI.h>
+
+// Pin definitions
+const int CS_PIN = 10;  // Chip Select pin, change if using a different pin
+
+// Flash memory size
+const unsigned long FLASH_SIZE = 1048576; // 8 Mbit = 1 Mbyte
+
+void setup() {
+  Serial.begin(115200);  // Start the serial communication
+  pinMode(CS_PIN, OUTPUT);
+  digitalWrite(CS_PIN, HIGH);  // Deselect the flash memory
+  SPI.begin();  // Initialize SPI
+
+  Serial.println("Reading entire flash memory...");
+  
+  // Read and print each byte in memory
+  for (unsigned long address = 0; address < FLASH_SIZE; address++) {
+    byte data = readFlashByte(address);
+    Serial.print("Address 0x");
+    Serial.print(address, HEX);
+    Serial.print(": 0x");
+    Serial.println(data, HEX);
+    
+    // Optional: Add a delay to slow down the output for easier viewing
+    // delay(1);
+  }
+
+  Serial.println("Done reading flash memory.");
+}
+
+void loop() {
+  // Do nothing in the loop
+}
+
+// Function to read a byte from a given address
+byte readFlashByte(unsigned long address) {
+  digitalWrite(CS_PIN, LOW);  // Select the flash memory
+  SPI.transfer(0x03);  // Send READ command (0x03)
+  
+  // Send the 24-bit address (most significant byte first)
+  SPI.transfer((address >> 16) & 0xFF);  // Send high byte
+  SPI.transfer((address >> 8) & 0xFF);   // Send middle byte
+  SPI.transfer(address & 0xFF);          // Send low byte
+  
+  byte data = SPI.transfer(0x00);  // Read the data byte
+  digitalWrite(CS_PIN, HIGH);  // Deselect the flash memory
+  
+  return data;
+}
